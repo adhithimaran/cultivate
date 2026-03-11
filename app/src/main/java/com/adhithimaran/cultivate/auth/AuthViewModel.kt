@@ -2,8 +2,6 @@ package com.adhithimaran.cultivate.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -75,16 +73,17 @@ class AuthViewModel : ViewModel() {
                 _authState.value = AuthState.Error(e.message ?: "Sign-up failed")
             }
         }
-
-        fun signOut() {
-            auth.signOut()
-            _authState.value = AuthState.Idle
-        }
-
-        fun resetState() {
-            _authState.value = AuthState.Idle
-        }
     }
+
+    fun signOut() {
+        auth.signOut()
+        _authState.value = AuthState.Idle
+    }
+
+    fun resetState() {
+        _authState.value = AuthState.Idle
+    }
+
 
 
 }
