@@ -1,0 +1,27 @@
+# Built application files
+*.apk
+*.aab
+*.ap_
+
+# Build directories
+/build/
+app/build/
+
+# Gradle
+.gradle/
+gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Local config — never commit these
+local.properties
+google-services.json
+*.keystore
+*.jks
+
+# IDE files
+/.idea/
+*.iml
+.DS_Store
+
+# KSP generated
+app/build/generated/
