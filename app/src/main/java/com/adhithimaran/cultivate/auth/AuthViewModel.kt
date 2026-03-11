@@ -28,12 +28,12 @@ class AuthViewModel : ViewModel() {
     val authState: StateFlow<AuthState> = _authState // can see not change
     val currentUser: FirebaseUser? get() = auth.currentUser // is user already signed-in upon openign app
 
-    fun signInWithGoogle(account: GoogleSignInAccount) {
+    fun signInWithGoogleToken(idToken: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-                val result = auth.signInWithCredential((credential)).await()
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                val result = auth.signInWithCredential(credential).await()
                 result.user?.let {
                     _authState.value = AuthState.Success(it)
                 } ?: run {
@@ -76,12 +76,9 @@ class AuthViewModel : ViewModel() {
             }
         }
 
-        fun signOut(googleSignInClient: GoogleSignInClient) {
-            viewModelScope.launch {
-                auth.signOut()
-                googleSignInClient.signOut().await()
-                _authState.value = AuthState.Idle
-            }
+        fun signOut() {
+            auth.signOut()
+            _authState.value = AuthState.Idle
         }
 
         fun resetState() {
