@@ -57,16 +57,23 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("home") {
                             HomeScreen(
-                                onSignOut = {
+                                onSignOut  = {
                                     FirebaseAuth.getInstance().signOut()
                                     navController.navigate("login") {
                                         popUpTo("home") { inclusive = true }
                                     }
-                                }
+                                },
+                                onAddHabit = { navController.navigate("add_habit") }
                             )
                         }
                         composable("add_habit") {
-                             AddHabitScreen()
+                            AddHabitScreen(
+                                onNavigateBack = {
+                                    navController.navigate("home") {
+                                        popUpTo("add_habit") { inclusive = true }
+                                    }
+                                }
+                            )
                         }
                         composable(
                             route = "habit/{habitId}",
