@@ -23,9 +23,7 @@ class AddHabitViewModel(
     private val repository: HabitRepository = HabitRepository()
 ) : ViewModel() {
 
-    // -------------------------------------------------------------------------
     // UI State
-    // -------------------------------------------------------------------------
 
     private val _uiState = MutableStateFlow(AddHabitUiState())
 
@@ -35,9 +33,7 @@ class AddHabitViewModel(
      */
     val uiState: StateFlow<AddHabitUiState> = _uiState.asStateFlow()
 
-    // -------------------------------------------------------------------------
     // Event handlers — called directly from the Composable
-    // -------------------------------------------------------------------------
 
     /** Called whenever the user edits the habit name field. */
     fun onNameChange(value: String) {
@@ -111,9 +107,7 @@ class AddHabitViewModel(
     }
 }
 
-// -----------------------------------------------------------------------------
 // UI State model
-// -----------------------------------------------------------------------------
 
 /**
  * Immutable snapshot of everything the Add Habit screen needs to render itself.
@@ -130,7 +124,7 @@ class AddHabitViewModel(
 data class AddHabitUiState(
     val name             : String    = "",
     val nameError        : String?   = null,
-    val duration         : Int       = 15,       // sensible default
+    val duration         : Int       = 15,       // default
     val durationError    : String?   = null,
     val selectedType     : HabitType = HabitType.DAILY,
     val isSaving         : Boolean   = false,
