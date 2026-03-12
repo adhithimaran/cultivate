@@ -118,13 +118,13 @@ fun AddHabitScreen(
                     .padding(top = 8.dp, bottom = 28.dp)
             ) {
                 Text(
-                    text  = "New Habit",
+                    text  = "Add Habit",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text  = "Define a habit you want to build.",
+                    text  = "Add any habit you'd like to track!",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
