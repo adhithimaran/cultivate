@@ -93,7 +93,7 @@ fun AddHabitScreen(
         }
     }
 
-    // Root Conainer
+    // Root Container
 
     Box(
         modifier = Modifier
