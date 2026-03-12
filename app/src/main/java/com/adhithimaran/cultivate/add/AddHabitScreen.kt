@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun AddHabitScreen(onSignOut: () -> Unit) {
+fun AddHabitScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -35,10 +35,11 @@ fun AddHabitScreen(onSignOut: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // TODO: Replace with my own custom icon later
             Text(
-                text = "Add Habit Screen",
-                fontSize = 56.sp
+                text = "Home Screen",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(

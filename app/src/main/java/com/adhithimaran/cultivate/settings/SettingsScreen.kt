@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SettingsScreen(onSignOut: () -> Unit) {
+fun SettingsScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -35,10 +35,11 @@ fun SettingsScreen(onSignOut: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // TODO: Replace with my own custom icon later
             Text(
-                text = "Settings Screen",
-                fontSize = 56.sp
+                text = "Settings",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(

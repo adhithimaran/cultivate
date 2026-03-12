@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun HabitDetailScreen(onSignOut: () -> Unit) {
+fun HabitDetailScreen(habitId: String?) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -37,7 +37,7 @@ fun HabitDetailScreen(onSignOut: () -> Unit) {
         ) {
             // TODO: Replace with my own custom icon later
             Text(
-                text = "Habit Detail Screen",
+                text = "Habit Detail Screen ID: habitId",
                 fontSize = 56.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
