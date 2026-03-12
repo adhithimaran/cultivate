@@ -21,6 +21,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Home Screen displays:
+ * - the users current habits to be completed
+ * - for each habit: habit name + duration, checkbox or button, current streak count, indicator if already completed today/week/month
+ * - filter habits by type so daily habits show today, weekly habits show this week, etc.
+ * - when user taps check: write a completion record to Firestore
+ * - Animate the checkbox state change
+ */
 @Composable
 fun HomeScreen(onSignOut: () -> Unit) {
     Box(
