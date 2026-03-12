@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("add_habit") {
-                             AddHabitScreen()
+                            AddHabitScreen(onNavigateBack = { navController.popBackStack() })
                         }
                         composable(
                             route = "habit/{habitId}",
