@@ -45,9 +45,8 @@ fun CultivateNavBar(navController: NavController) {
                 selected = currentRoute == navItem.route,
                 onClick = {
                     navController.navigate(navItem.route) {
-                        popUpTo("home") { saveState = true }
+                        popUpTo("home") { inclusive = false }
                         launchSingleTop = true
-                        restoreState = true
                     }
                 },
                 icon = {
