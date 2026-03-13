@@ -8,7 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,9 +69,8 @@ import java.time.format.DateTimeFormatter
  *
  * @param onSignOut     Called when the user taps the sign-out icon.
  * @param onAddHabit    Called when the user taps the FAB.
- * @param onHabitClick  Called with the habit's Firestore ID when the user taps a card body.
- *                      Use this to navigate to HabitDetailScreen.
- * @param viewModel     Injected by [viewModel()] factory; override in tests.
+ * @param onHabitClick  Called with the habit's Firestore ID when the user taps a card.
+ * @param viewModel     Injected by [viewModel()] factory.
  */
 @Composable
 fun HomeScreen(
@@ -130,49 +130,49 @@ fun HomeScreen(
 
                     item {
                         HabitSection(
-                            title        = "Today",
-                            icon         = Icons.Outlined.Star,
-                            accentColor  = MaterialTheme.colorScheme.primary,
-                            sectionBg    = MaterialTheme.colorScheme.primary.copy(alpha = 0.03f),
-                            totalCount   = state.dailyHabits.size,
-                            doneCount    = state.dailyHabits.count { it.isCompleted },
-                            items        = state.dailyHabits,
-                            emptyHint    = "No daily habits yet — tap + to add one",
-                            onCheck      = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
-                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) },
-                            onCardClick  = { item -> onHabitClick(item.habit.id) }
+                            title       = "Today",
+                            icon        = Icons.Outlined.Star,
+                            accentColor = MaterialTheme.colorScheme.primary,
+                            sectionBg   = MaterialTheme.colorScheme.primary.copy(alpha = 0.03f),
+                            totalCount  = state.dailyHabits.size,
+                            doneCount   = state.dailyHabits.count { it.isCompleted },
+                            items       = state.dailyHabits,
+                            emptyHint   = "No daily habits yet — tap + to add one",
+                            onCheck     = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
+                            onDelete    = { item -> viewModel.onDeleteHabit(item.habit.id) },
+                            onCardClick = { item -> onHabitClick(item.habit.id) }
                         )
                     }
 
                     item {
                         HabitSection(
-                            title        = "This Week",
-                            icon         = Icons.Outlined.DateRange,
-                            accentColor  = MaterialTheme.colorScheme.secondary,
-                            sectionBg    = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                            totalCount   = state.weeklyHabits.size,
-                            doneCount    = state.weeklyHabits.count { it.isCompleted },
-                            items        = state.weeklyHabits,
-                            emptyHint    = "No weekly habits yet — tap + to add one",
-                            onCheck      = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
-                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) },
-                            onCardClick  = { item -> onHabitClick(item.habit.id) }
+                            title       = "This Week",
+                            icon        = Icons.Outlined.DateRange,
+                            accentColor = MaterialTheme.colorScheme.secondary,
+                            sectionBg   = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
+                            totalCount  = state.weeklyHabits.size,
+                            doneCount   = state.weeklyHabits.count { it.isCompleted },
+                            items       = state.weeklyHabits,
+                            emptyHint   = "No weekly habits yet — tap + to add one",
+                            onCheck     = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
+                            onDelete    = { item -> viewModel.onDeleteHabit(item.habit.id) },
+                            onCardClick = { item -> onHabitClick(item.habit.id) }
                         )
                     }
 
                     item {
                         HabitSection(
-                            title        = "This Month",
-                            icon         = Icons.Outlined.DateRange,
-                            accentColor  = MaterialTheme.colorScheme.tertiary,
-                            sectionBg    = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.03f),
-                            totalCount   = state.monthlyHabits.size,
-                            doneCount    = state.monthlyHabits.count { it.isCompleted },
-                            items        = state.monthlyHabits,
-                            emptyHint    = "No monthly habits yet — tap + to add one",
-                            onCheck      = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
-                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) },
-                            onCardClick  = { item -> onHabitClick(item.habit.id) }
+                            title       = "This Month",
+                            icon        = Icons.Outlined.DateRange,
+                            accentColor = MaterialTheme.colorScheme.tertiary,
+                            sectionBg   = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.03f),
+                            totalCount  = state.monthlyHabits.size,
+                            doneCount   = state.monthlyHabits.count { it.isCompleted },
+                            items       = state.monthlyHabits,
+                            emptyHint   = "No monthly habits yet — tap + to add one",
+                            onCheck     = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
+                            onDelete    = { item -> viewModel.onDeleteHabit(item.habit.id) },
+                            onCardClick = { item -> onHabitClick(item.habit.id) }
                         )
                     }
 
@@ -358,9 +358,14 @@ private fun DeleteBackground(isRevealed: Boolean) {
 /**
  * A single habit card.
  *
- * The card body is clickable (navigates to detail). The check circle is a
- * separate independent click target so tapping the circle never triggers
- * navigation, and tapping anywhere else on the card never triggers a check.
+ * The left column (name + chips) uses [pointerInput] + [detectTapGestures] instead
+ * of [Modifier.clickable] or [Card]'s onClick. This is necessary because
+ * [SwipeToDismissBox] installs a horizontal drag handler that consumes touch events
+ * before [clickable] or [Card.onClick] can receive them. [detectTapGestures] runs
+ * at the raw pointer-input level and correctly receives taps alongside the swipe
+ * handler without conflict.
+ *
+ * The check circle is a fully independent tap target and never triggers navigation.
  */
 @Composable
 private fun HabitCard(
@@ -377,10 +382,7 @@ private fun HabitCard(
     )
 
     Card(
-        modifier  = Modifier
-            .fillMaxWidth()
-            // The whole card is clickable for navigation to detail
-            .clickable(onClick = onCardClick),
+        modifier  = Modifier.fillMaxWidth(),
         shape     = RoundedCornerShape(12.dp),
         colors    = CardDefaults.cardColors(containerColor = cardColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -392,7 +394,15 @@ private fun HabitCard(
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            // Tap the left column (name + chips) to navigate to detail.
+            // pointerInput/detectTapGestures receives taps even inside SwipeToDismissBox.
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { onCardClick() })
+                    }
+            ) {
                 Text(
                     text  = item.habit.name,
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -417,7 +427,7 @@ private fun HabitCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Check circle: independent click area — does NOT trigger onCardClick
+            // Check circle: fully independent tap target, never navigates
             CheckCircle(
                 isCompleted = item.isCompleted,
                 isLoading   = item.isLoading,
@@ -452,7 +462,9 @@ private fun CheckCircle(
             .border(width = 2.dp, color = borderColor, shape = CircleShape)
             .background(color = fillColor, shape = CircleShape)
             .clip(CircleShape)
-            .clickable(enabled = !isLoading && !isCompleted, onClick = onClick),
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { if (!isLoading && !isCompleted) onClick() })
+            },
         contentAlignment = Alignment.Center
     ) {
         AnimatedContent(
@@ -529,7 +541,7 @@ private fun HomeHeader(onSignOut: () -> Unit) {
 private fun greeting(): String = when (LocalTime.now().hour) {
     in 5..11  -> "Good morning"
     in 12..16 -> "Good afternoon"
-    in 17..16 -> "Good evening"
+    in 17..20 -> "Good evening"
     else      -> "Good night"
 }
 

@@ -13,22 +13,22 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.adhithimaran.cultivate.add.AddHabitScreen
 import com.adhithimaran.cultivate.auth.LoginScreen
+import com.adhithimaran.cultivate.detail.HabitDetailScreen
 import com.adhithimaran.cultivate.home.HomeScreen
 import com.adhithimaran.cultivate.navigation.CultivateNavBar
+import com.adhithimaran.cultivate.settings.SettingsScreen
 import com.adhithimaran.cultivate.ui.theme.CultivateTheme
 import com.google.firebase.auth.FirebaseAuth
-import com.adhithimaran.cultivate.add.AddHabitScreen
-import com.adhithimaran.cultivate.detail.HabitDetailScreen
-import com.adhithimaran.cultivate.settings.SettingsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             CultivateTheme {
-                val navController = rememberNavController()
-                val currentUser = FirebaseAuth.getInstance().currentUser
+                val navController   = rememberNavController()
+                val currentUser     = FirebaseAuth.getInstance().currentUser
                 val startDestination = if (currentUser != null) "home" else "login"
 
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -36,16 +36,19 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     bottomBar = {
-                        if (currentRoute != "login") {
+                        // Hide the nav bar on login and detail screens
+                        if (currentRoute != "login" &&
+                            currentRoute != "habit_detail/{habitId}") {
                             CultivateNavBar(navController = navController)
                         }
                     }
                 ) { innerPadding ->
                     NavHost(
-                        navController = navController,
+                        navController    = navController,
                         startDestination = startDestination,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier         = Modifier.padding(innerPadding)
                     ) {
+
                         composable("login") {
                             LoginScreen(
                                 onLoginSuccess = {
@@ -55,17 +58,22 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+
                         composable("home") {
                             HomeScreen(
-                                onSignOut  = {
+                                onSignOut = {
                                     FirebaseAuth.getInstance().signOut()
                                     navController.navigate("login") {
                                         popUpTo("home") { inclusive = true }
                                     }
                                 },
-                                onAddHabit = { navController.navigate("add_habit") }
+                                onAddHabit   = { navController.navigate("add_habit") },
+                                onHabitClick = { habitId ->
+                                    navController.navigate("habit_detail/$habitId")
+                                }
                             )
                         }
+
                         composable("add_habit") {
                             AddHabitScreen(
                                 onNavigateBack = {
@@ -75,15 +83,22 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+
+                        // habitId is pulled automatically from SavedStateHandle
+                        // inside HabitDetailViewModel — no manual extraction needed
                         composable(
-                            route = "habit/{habitId}",
-                            arguments = listOf(navArgument("habitId") { type = NavType.StringType })
-                        ) { backStackEntry ->
-                            val habitId = backStackEntry.arguments?.getString("habitId")
-                            HabitDetailScreen(habitId = habitId)
+                            route     = "habit_detail/{habitId}",
+                            arguments = listOf(
+                                navArgument("habitId") { type = NavType.StringType }
+                            )
+                        ) {
+                            HabitDetailScreen(
+                                onNavigateBack = { navController.popBackStack() }
+                            )
                         }
+
                         composable("settings") {
-                             SettingsScreen()
+                            SettingsScreen()
                         }
                     }
                 }
