@@ -92,6 +92,26 @@ class HabitRepository {
     }
 
     /**
+     * Returns a real-time [Flow] for a single habit document.
+     *
+     * Used by the Detail screen so it subscribes to exactly one document rather
+     * than downloading the entire habits collection. Emits null if the document
+     * is deleted while the screen is open (the screen can then navigate back).
+     *
+     * @param habitId The Firestore document ID of the habit to observe.
+     */
+    fun getHabitFlow(habitId: String): Flow<Habit?> = callbackFlow {
+        val listener = userHabitsRef()
+            .document(habitId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
+                val habit = snapshot?.data?.let { Habit.fromMap(it) }
+                trySend(habit)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    /**
      * Permanently deletes a habit document from Firestore by its ID.
      *
      * Note: This does not delete associated completions. If you need to clean those up

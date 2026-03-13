@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,7 +31,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.ExitToApp
-import androidx.compose.material.icons.outlined.WbSunny
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -67,19 +66,18 @@ import java.time.format.DateTimeFormatter
 /**
  * Home screen — the user's daily habit dashboard.
  *
- * Three sections (Today / This Week / This Month) each have a distinct soft
- * background tint so users can immediately orient themselves. All colors and
- * text styles resolve through [MaterialTheme] — no hardcoded values exist here.
- *
- * @param onSignOut   Called when the user taps the sign-out icon.
- * @param onAddHabit  Called when the user taps the FAB.
- * @param viewModel   Injected by [viewModel()] factory; override in tests.
+ * @param onSignOut     Called when the user taps the sign-out icon.
+ * @param onAddHabit    Called when the user taps the FAB.
+ * @param onHabitClick  Called with the habit's Firestore ID when the user taps a card body.
+ *                      Use this to navigate to HabitDetailScreen.
+ * @param viewModel     Injected by [viewModel()] factory; override in tests.
  */
 @Composable
 fun HomeScreen(
-    onSignOut  : () -> Unit,
-    onAddHabit : () -> Unit,
-    viewModel  : HomeViewModel = viewModel()
+    onSignOut    : () -> Unit,
+    onAddHabit   : () -> Unit,
+    onHabitClick : (habitId: String) -> Unit,
+    viewModel    : HomeViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -90,16 +88,12 @@ fun HomeScreen(
             .safeDrawingPadding()
     ) {
         when {
-
-            // ── First-load spinner ────────────────────────────────────────────
             state.isLoading -> {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color    = MaterialTheme.colorScheme.primary
                 )
             }
-
-            // ── Error state ───────────────────────────────────────────────────
             state.error != null -> {
                 Column(
                     modifier            = Modifier
@@ -127,78 +121,66 @@ fun HomeScreen(
                     )
                 }
             }
-
-            // ── Main content ──────────────────────────────────────────────────
             else -> {
                 LazyColumn(
                     modifier            = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
-
-                    // ── Page header ───────────────────────────────────────────
                     item { HomeHeader(onSignOut = onSignOut) }
 
-                    // ── Today — primary (sage green) tint ─────────────────────
                     item {
                         HabitSection(
                             title        = "Today",
-                            icon         = Icons.Outlined.WbSunny,
-                            // Daily section: primary-tinted background
-                            // Resolves to CultivatePrimary / CultivatePrimaryLight
+                            icon         = Icons.Outlined.Star,
                             accentColor  = MaterialTheme.colorScheme.primary,
-                            sectionBg    = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                            sectionBg    = MaterialTheme.colorScheme.primary.copy(alpha = 0.03f),
                             totalCount   = state.dailyHabits.size,
                             doneCount    = state.dailyHabits.count { it.isCompleted },
                             items        = state.dailyHabits,
-                            emptyHint    = "No daily habits yet",
+                            emptyHint    = "No daily habits yet — tap + to add one",
                             onCheck      = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
-                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) }
+                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) },
+                            onCardClick  = { item -> onHabitClick(item.habit.id) }
                         )
                     }
 
-                    // ── This Week — secondary (muted mint) tint ───────────────
                     item {
                         HabitSection(
                             title        = "This Week",
                             icon         = Icons.Outlined.DateRange,
-                            // Weekly section: secondary-tinted background
-                            // Resolves to CultivateSecondary / CultivateSecondaryLight
                             accentColor  = MaterialTheme.colorScheme.secondary,
-                            sectionBg    = MaterialTheme.colorScheme.secondary.copy(alpha = 0.08f),
+                            sectionBg    = MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
                             totalCount   = state.weeklyHabits.size,
                             doneCount    = state.weeklyHabits.count { it.isCompleted },
                             items        = state.weeklyHabits,
-                            emptyHint    = "No weekly habits yet",
+                            emptyHint    = "No weekly habits yet — tap + to add one",
                             onCheck      = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
-                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) }
+                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) },
+                            onCardClick  = { item -> onHabitClick(item.habit.id) }
                         )
                     }
 
-                    // ── This Month — tertiary (blush pink) tint ───────────────
                     item {
                         HabitSection(
                             title        = "This Month",
-                            icon         = MonthIcon,
-                            // Monthly section: tertiary-tinted background
-                            // Resolves to CultivateTertiary / CultivateTertiaryLight
+                            icon         = Icons.Outlined.DateRange,
                             accentColor  = MaterialTheme.colorScheme.tertiary,
-                            sectionBg    = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f),
+                            sectionBg    = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.03f),
                             totalCount   = state.monthlyHabits.size,
                             doneCount    = state.monthlyHabits.count { it.isCompleted },
                             items        = state.monthlyHabits,
-                            emptyHint    = "No monthly habits yet",
+                            emptyHint    = "No monthly habits yet — tap + to add one",
                             onCheck      = { item -> viewModel.onCheckHabit(item.habit, item.isCompleted) },
-                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) }
+                            onDelete     = { item -> viewModel.onDeleteHabit(item.habit.id) },
+                            onCardClick  = { item -> onHabitClick(item.habit.id) }
                         )
                     }
 
-                    // Space so FAB never covers the last card
                     item { Spacer(modifier = Modifier.height(100.dp)) }
                 }
             }
         }
 
-        // ── FAB ───────────────────────────────────────────────────────────────
         FloatingActionButton(
             onClick        = onAddHabit,
             modifier       = Modifier
@@ -217,16 +199,6 @@ fun HomeScreen(
 
 // ── Section ───────────────────────────────────────────────────────────────────
 
-/**
- * A full section block: tinted background container, header row, and habit cards.
- *
- * Wrapping the entire section (header + cards) in a single [Box] with a rounded
- * background gives a clear visual grouping. The background color is a very soft
- * alpha overlay of the section's [accentColor] so it tints without overpowering.
- *
- * @param accentColor  The scheme color that tints the icon, badge, and check circles.
- * @param sectionBg    The section's background fill — a low-alpha overlay of [accentColor].
- */
 @Composable
 private fun HabitSection(
     title       : String,
@@ -238,18 +210,16 @@ private fun HabitSection(
     items       : List<HabitUiItem>,
     emptyHint   : String,
     onCheck     : (HabitUiItem) -> Unit,
-    onDelete    : (HabitUiItem) -> Unit
+    onDelete    : (HabitUiItem) -> Unit,
+    onCardClick : (HabitUiItem) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            // Horizontal margin so the tinted block sits inset from the screen edges,
-            // giving visual breathing room and a "card-like" section appearance
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(sectionBg)
     ) {
-        // ── Section header ────────────────────────────────────────────────────
         Row(
             modifier              = Modifier
                 .fillMaxWidth()
@@ -269,35 +239,29 @@ private fun HabitSection(
                 )
                 Text(
                     text  = title,
-                    // titleLarge = SemiBold 22sp in Type.kt
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
-            // "done / total" pill — fills with accentColor when all done
             if (totalCount > 0) {
-                val allDone    = doneCount == totalCount
-                val badgeBg    = if (allDone) accentColor
-                else         MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-                val badgeFg    = if (allDone) MaterialTheme.colorScheme.onPrimary
-                else         MaterialTheme.colorScheme.onSurfaceVariant
+                val allDone = doneCount == totalCount
                 Surface(
-                    color = badgeBg,
+                    color = if (allDone) accentColor
+                    else         MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Text(
                         text     = "$doneCount / $totalCount",
-                        // labelMedium = Medium 12sp in Type.kt
                         style    = MaterialTheme.typography.labelMedium,
-                        color    = badgeFg,
+                        color    = if (allDone) MaterialTheme.colorScheme.onPrimary
+                        else        MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                     )
                 }
             }
         }
 
-        // ── Cards or empty hint ───────────────────────────────────────────────
         if (items.isEmpty()) {
             Text(
                 text     = emptyHint,
@@ -318,7 +282,8 @@ private fun HabitSection(
                         item        = item,
                         accentColor = accentColor,
                         onCheck     = { onCheck(item) },
-                        onDelete    = { onDelete(item) }
+                        onDelete    = { onDelete(item) },
+                        onCardClick = { onCardClick(item) }
                     )
                 }
             }
@@ -328,17 +293,14 @@ private fun HabitSection(
 
 // ── Habit card ────────────────────────────────────────────────────────────────
 
-/**
- * Wraps [HabitCard] in a swipe-to-dismiss gesture that reveals a delete background.
- * The threshold is 40% of the card width to prevent accidental deletions.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeableHabitCard(
     item        : HabitUiItem,
     accentColor : Color,
     onCheck     : () -> Unit,
-    onDelete    : () -> Unit
+    onDelete    : () -> Unit,
+    onCardClick : () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange  = { value ->
@@ -360,15 +322,12 @@ private fun SwipeableHabitCard(
         HabitCard(
             item        = item,
             accentColor = accentColor,
-            onCheck     = onCheck
+            onCheck     = onCheck,
+            onCardClick = onCardClick
         )
     }
 }
 
-/**
- * The red background peeking out while the user swipes a habit card left.
- * Animates from transparent to [errorContainer] as the swipe threshold approaches.
- */
 @Composable
 private fun DeleteBackground(isRevealed: Boolean) {
     val bg by animateColorAsState(
@@ -397,19 +356,19 @@ private fun DeleteBackground(isRevealed: Boolean) {
 }
 
 /**
- * A single habit row inside the list.
+ * A single habit card.
  *
- * Card background animates from [surface] to a soft alpha of [accentColor] on
- * completion so the card "settles" into done state rather than snapping.
- * The name gets a strikethrough when done so the list is instantly scannable.
+ * The card body is clickable (navigates to detail). The check circle is a
+ * separate independent click target so tapping the circle never triggers
+ * navigation, and tapping anywhere else on the card never triggers a check.
  */
 @Composable
 private fun HabitCard(
     item        : HabitUiItem,
     accentColor : Color,
-    onCheck     : () -> Unit
+    onCheck     : () -> Unit,
+    onCardClick : () -> Unit
 ) {
-    // Completed card gets a very soft tint of the section's accent color
     val cardColor by animateColorAsState(
         targetValue   = if (item.isCompleted) accentColor.copy(alpha = 0.10f)
         else                  MaterialTheme.colorScheme.surface,
@@ -418,7 +377,10 @@ private fun HabitCard(
     )
 
     Card(
-        modifier  = Modifier.fillMaxWidth(),
+        modifier  = Modifier
+            .fillMaxWidth()
+            // The whole card is clickable for navigation to detail
+            .clickable(onClick = onCardClick),
         shape     = RoundedCornerShape(12.dp),
         colors    = CardDefaults.cardColors(containerColor = cardColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -430,39 +392,32 @@ private fun HabitCard(
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
-            // ── Left: name + chips ────────────────────────────────────────────
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text  = item.habit.name,
-                    // titleMedium = Medium 16sp in Type.kt
                     style = MaterialTheme.typography.titleMedium.copy(
                         textDecoration = if (item.isCompleted) TextDecoration.LineThrough
                         else                  TextDecoration.None
                     ),
-                    color     = if (item.isCompleted)
+                    color    = if (item.isCompleted)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.40f)
                     else
                         MaterialTheme.colorScheme.onSurface,
-                    maxLines  = 1,
-                    overflow  = TextOverflow.Ellipsis
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(5.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     InfoChip(text = "${item.habit.durationMinutes} min")
                     if (item.streak > 0) {
-                        // Streak chip uses the section accent color for a subtle identity link
-                        InfoChip(
-                            text      = "${item.streak} streak",
-                            tintColor = accentColor
-                        )
+                        InfoChip(text = "${item.streak} streak", tintColor = accentColor)
                     }
                 }
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // ── Right: animated check circle ──────────────────────────────────
+            // Check circle: independent click area — does NOT trigger onCardClick
             CheckCircle(
                 isCompleted = item.isCompleted,
                 isLoading   = item.isLoading,
@@ -473,12 +428,6 @@ private fun HabitCard(
     }
 }
 
-/**
- * Animated circular check button.
- * Both the border and fill animate from neutral → [accentColor] on completion.
- * The section's accent color is used so the check matches the surrounding section,
- * reinforcing the visual grouping.
- */
 @Composable
 private fun CheckCircle(
     isCompleted : Boolean,
@@ -512,12 +461,12 @@ private fun CheckCircle(
             label          = "checkContent"
         ) { loading ->
             when {
-                loading      -> CircularProgressIndicator(
+                loading     -> CircularProgressIndicator(
                     modifier    = Modifier.size(16.dp),
                     strokeWidth = 2.dp,
                     color       = accentColor
                 )
-                isCompleted  -> Icon(
+                isCompleted -> Icon(
                     imageVector        = Icons.Default.Check,
                     contentDescription = "Completed",
                     tint               = MaterialTheme.colorScheme.onPrimary,
@@ -528,24 +477,13 @@ private fun CheckCircle(
     }
 }
 
-/**
- * Small pill chip for duration and streak display.
- *
- * @param tintColor When non-null (used for streak), the background gets a soft tint
- *                  of [tintColor] to link it visually to the section accent.
- */
 @Composable
-private fun InfoChip(
-    text      : String,
-    tintColor : Color? = null
-) {
+private fun InfoChip(text: String, tintColor: Color? = null) {
     val bg = tintColor?.copy(alpha = 0.12f) ?: MaterialTheme.colorScheme.surfaceVariant
     val fg = tintColor ?: MaterialTheme.colorScheme.onSurfaceVariant
-
     Surface(color = bg, shape = RoundedCornerShape(6.dp)) {
         Text(
             text     = text,
-            // labelSmall = Medium 11sp in Type.kt — compact but legible
             style    = MaterialTheme.typography.labelSmall,
             color    = fg,
             modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
@@ -553,12 +491,8 @@ private fun InfoChip(
     }
 }
 
-// ── Page header ───────────────────────────────────────────────────────────────
+// ── Header ────────────────────────────────────────────────────────────────────
 
-/**
- * Top header: greeting, today's date, and a sign-out icon.
- * Clean layout — no icons competing with the greeting text.
- */
 @Composable
 private fun HomeHeader(onSignOut: () -> Unit) {
     Row(
@@ -571,14 +505,12 @@ private fun HomeHeader(onSignOut: () -> Unit) {
         Column {
             Text(
                 text  = greeting(),
-                // headlineMedium = SemiBold 28sp in Type.kt
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text  = todayLabel(),
-                // bodyMedium = Normal 14sp in Type.kt
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -594,33 +526,12 @@ private fun HomeHeader(onSignOut: () -> Unit) {
     }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Returns a time-appropriate greeting: Good morning / afternoon / evening / night. */
 private fun greeting(): String = when (LocalTime.now().hour) {
     in 5..11  -> "Good morning"
     in 12..16 -> "Good afternoon"
-    in 17..20 -> "Good evening"
+    in 17..16 -> "Good evening"
     else      -> "Good night"
 }
 
-/** "Thursday, March 12" */
 private fun todayLabel(): String =
     LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d"))
-
-/**
- * A custom month-calendar icon drawn from standard Material icons.
- *
- * [Icons.Outlined.DateRange] is used for "week" so we need a visually distinct
- * choice for "month". [Icons.Outlined.CalendarToday] would be identical to "today",
- * so we compose a custom vector icon here using [androidx.compose.ui.graphics.vector.ImageVector].
- *
- * NOTE: If you add the `material-icons-extended` dependency to your build.gradle:
- *   implementation("androidx.compose.material:material-icons-extended")
- * you can replace this with Icons.Outlined.CalendarMonth, which is cleaner.
- *
- * For now this uses the standard [androidx.compose.material.icons.outlined.DateRange] icon
- * re-aliased as the month icon to avoid the extended dependency.
- * Swap this constant for Icons.Outlined.CalendarMonth once you add the dependency.
- */
-private val MonthIcon: ImageVector get() = Icons.Outlined.DateRange
